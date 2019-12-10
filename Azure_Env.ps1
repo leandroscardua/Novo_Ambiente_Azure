@@ -24,9 +24,9 @@ TODO Enhancements
 ### C O N N E C T I O N ###
 ###########################
 
-$env = Get-AzureRmEnvironment -Name AzureUSGovernment
+$env = Get-AzureRmEnvironment -Name AzureCloud
 Login-AzureRmAccount -Environment $env  
-$subname = ""   # Enter the name of teh subscription here
+$subname = ""   # Entre com nome da subscription, para executar o login no tenant
 $Id = Select-AzureRmSubscription -SubscriptionName "$subname"
 
 
@@ -55,47 +55,47 @@ $REDISVMNumber = "1"   # Linux VM
 $BISQLVMnumber = "1"   # BI SQL Server
 
 $convname = "TEST" # The value needs to be in CAPITAL LETTERS and together #
-$uploadfolder = 'C:\azure\environment'
+$uploadfolder = 'C:\azure\environment' # Salve os scripts neste folder.
 $officeip = "XXX.XXX.XXX.XXX" # Add your public Ip here, to allow the external access
-$rdsname = "rds"
+$rdsname = "rds" # $rdsname" it will be the name to access the RDP server by the name: using azure governament the access will be $rdsname.$location.azureaddress
 #Password of all user during the deployment will use this password and convention for the name ##
 $defaultpass = "enter a password here"
 $usernamead ="leandro_user"
 $usernamenumber = "5"
 
 $location = "eastus2" # Change the location base with your requirements
-$vnetname = ("$convname"+"-VNET")
-$resourcegroupname = ("$convname"+"-RG")
-$diagstorageacc = ($convname.ToLower() + "sa")
-$addressprefix = "10.10.0.0/16"
-$subnetname = ("$convname"+"-VNET")
-$subnetadress = "10.10.1.0/24"
-$storageaccountname = ($convname.ToLower() + "sa")
-$storageContainer = "domain"
-$fileNamepromote = "promote.ps1"
-$fileNameoug = "oug.ps1"
-$fileNamerds = "rds.ps1"
-$fileNamesql = "sqlserver.ps1"
-$fileNamegpo = "gpo.zip"
-$fileNamelinux = "users.sh"
+$vnetname = ("$convname"+"-VNET") # Nome da Virtual Network
+$resourcegroupname = ("$convname"+"-RG") # Nome do Resource Group
+$diagstorageacc = ($convname.ToLower() + "sa") # Storage account para habiliar o log para as VM durante sua operacao
+$addressprefix = "10.10.0.0/16" # O endereco de IP para a Virtual Network
+$subnetname = ("$convname"+"-VNET") # Nome da subnet que sera utilizada pelas VMs
+$subnetadress = "10.10.1.0/24" # Enderecamente de IP que sera utilizado na subnet
+$storageaccountname = ($convname.ToLower() + "sa") # nome da storage account 
+$storageContainer = "domain" # o nome do container que sera criando dentro da storage account
+$fileNamepromote = "promote.ps1" # Nome do Script que sera utilizado para promover a VM para controlador do dominio
+$fileNameoug = "oug.ps1" # Nome do Script para criar usuarios, group, OU and etc
+$fileNamerds = "rds.ps1" # Nome do Script para instalar o servidor RDS e instalar softwares definidos no Script
+$fileNamesql = "sqlserver.ps1" # Nome do Script para configurar o Microsoft SQL na Vm
+$fileNamegpo = "gpo.zip" # Nome do arquivos que sera utilizador para import GPo previamente criada.
+$fileNamelinux = "users.sh" # Nome do bash script para adcionar usuarios no linux como sudo.
 $subscription = $Id.Subscription.Id 
-$nsgnameinternal = ("$convname"+"-Internal-NSG")
-# Domain Credentials #
-$netbiosnamead ="leandro"
-$FQDNDNS ="training"
-$FQDNDomain = "$netbiosnamead.$FQDNDNS"
-$safemodepassword = "$defaultpass"
-$domainadmin = "testadmin"
+$nsgnameinternal = ("$convname"+"-Internal-NSG") # Nome da Network Security group
+# Domain Credential e informacao sobre o dominio#
+$netbiosnamead ="leandro" # netbios name
+$FQDNDNS ="training" # Extensao do FQDN
+$FQDNDomain = "$netbiosnamead.$FQDNDNS" # FQDN com o nome completo
+$safemodepassword = "$defaultpass" 
+$domainadmin = "testadmin" 
 $UserNamedomainadmin = "$netbiosnamead\$domainadmin"
 $PWDDomainUser = "$defaultpass"
-$OUPath = "OU=Servers,DC=$netbiosnamead,DC=$FQDNDNS"
-$OUPathAPP = "OU=APP,OU=Servers,DC=$netbiosnamead,DC=$FQDNDNS"
-$OUPathWEBAPP = "OU=WEB,OU=Servers,DC=$netbiosnamead,DC=$FQDNDNS"
+$OUPath = "OU=Servers,DC=$netbiosnamead,DC=$FQDNDNS" # OU onde as VM sera adicionadas
+$OUPathAPP = "OU=APP,OU=Servers,DC=$netbiosnamead,DC=$FQDNDNS" # OU onde as VM de applicacao serao adicionadas
+$OUPathWEBAPP = "OU=WEB,OU=Servers,DC=$netbiosnamead,DC=$FQDNDNS" # OU onde as VM para Servico WEB serao adicionadas
 $SecurePassword = ConvertTo-SecureString $PWDDomainUser -AsPlainText -Force
 $DomainCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $UserNamedomainadmin,$SecurePassword
+# Load Balance e configuracoes
 $ASGName = ("$convname" + "-AS")
 $LBDatabase = ("$convname"+"DB-LB")
-# IPs In use #
 # 10.250.1.57, reserved for SQL Cluster IP.
 $LBIp = "10.10.1.58"
 $LBIpReport = "10.10.1.59"
@@ -103,15 +103,14 @@ $domaincontrollerip = "10.10.1.200"
 $internalipRDS = "10.10.1.205"
 $remoteserverip = $internalipRDS
 $publicipname = ("$convname" + "PI")
-# Local Admin Credentials #
+# Local Admin Credentials, utilizados na criacao das VM #
 $LocalAdmin = "testadmin"
 $GetPassword = "$defaultpass"
 $LocalSecurePassword = ConvertTo-SecureString $GetPassword -AsPlainText -Force
 $LocalCredential = New-Object -TypeName System.Management.Automation.PSCredential $LocalAdmin,$LocalSecurePassword
-#SQL Server #
+#SQL Server User Name and Service Account #
 $SqlLoginUsername = "sa"
 $SqlLoginPassword = "$defaultpass"
-#SQL Server Service Account#
 $SvcSecusername = "$netbiosnamead\svcsec"
 $SvcSecPassword = "$defaultpass"
 #Windows VM Applications and Operation Information SKu,image and etc
